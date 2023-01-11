@@ -1,0 +1,44 @@
+version: '3'
+
+services:
+  postgres:
+    image: postgis/postgis:12-3.3-alpine
+    restart: always
+    ports:
+      - "5432:5432"
+    environment:
+      - DATABASE_HOST=127.0.0.1
+      - POSTGRES_USER=pipelines
+      - POSTGRES_PASSWORD=pass1234
+      - POSTGRES_DB=pipelines
+    volumes:
+      - db-data-test:/var/lib/postgresql/data/
+
+    networks:
+      - pipelines-network
+
+  web:
+    build: .
+    command: python manage.py runserver 0.0.0.0:8000
+    volumes:
+      - .:/web-volume
+    ports:
+      - "8000:8000"
+
+    depends_on:
+      - postgres
+
+    environment:
+      - DATABASE_URL=postgis://pipelines:pass1234@postgres/pipelines
+
+    networks:
+      - pipelines-network
+
+networks:
+  pipelines-network:
+    driver: bridge
+
+volumes:
+  db-data-test: {}
+
+
